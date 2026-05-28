@@ -222,3 +222,5 @@ app.post('/api/chat/reset', authenticateToken, async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+module.exports = app;
