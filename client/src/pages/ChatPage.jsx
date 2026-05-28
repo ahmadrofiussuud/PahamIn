@@ -15,7 +15,9 @@ const ChatPage = () => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const API_URL = 'http://localhost:5000/api/chat';
+  const API_URL = import.meta.env.VITE_API_URL 
+    ? `${import.meta.env.VITE_API_URL}/api/chat` 
+    : 'http://localhost:5000/api/chat';
   const displayName = user?.name || "Budi Saputra";
 
   const scrollToBottom = () => {
