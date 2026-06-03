@@ -75,7 +75,7 @@ const Logo = ({ size = 'normal', showText = true, className = '' }) => {
       {showText && (
         <span
           className={`font-extrabold tracking-tight select-none ${
-            size === 'small' ? 'text-xl' : size === 'large' ? 'text-4xl' : 'text-3xl'
+            size === 'small' ? 'text-lg' : size === 'large' ? 'text-3xl' : 'text-2xl'
           }`}
         >
           <span className="text-[#1E3A5F]">Paham</span>
