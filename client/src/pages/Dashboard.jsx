@@ -78,7 +78,8 @@ const Dashboard = () => {
             <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
               <User size={14} className="text-white" />
             </div>
-            <span className="text-sm font-semibold">{displayName}</span>
+            <span className="text-sm font-semibold hidden sm:inline">{displayName}</span>
+            <span className="text-sm font-semibold sm:hidden">{firstName}</span>
             <ChevronDown size={16} className={`transition-transform duration-300 ${profileDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 

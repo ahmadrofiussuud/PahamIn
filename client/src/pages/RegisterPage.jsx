@@ -105,7 +105,7 @@ const RegisterPage = () => {
           </div>
 
           {/* Interactive Illustration Area with Dotted Path & Floating Badges */}
-          <div className="relative w-full max-w-md mx-auto lg:mx-0 mt-8 h-[340px] flex items-end justify-center select-none">
+          <div className="relative w-full max-w-md mx-auto lg:mx-0 mt-8 h-[340px] flex items-end justify-center select-none register-illustration-container">
             
             {/* Dotted path lines behind everything */}
             <div className="absolute inset-0 w-full h-full -z-10">

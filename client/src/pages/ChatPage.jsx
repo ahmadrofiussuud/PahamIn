@@ -19,6 +19,7 @@ const ChatPage = () => {
     ? `${import.meta.env.VITE_API_URL}/api/chat` 
     : 'http://localhost:5000/api/chat';
   const displayName = user?.name || "Budi Saputra";
+  const firstName = displayName.split(' ')[0];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -126,7 +127,8 @@ const ChatPage = () => {
             <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
               <User size={14} className="text-white" />
             </div>
-            <span className="text-sm font-semibold">{displayName}</span>
+            <span className="text-sm font-semibold hidden sm:inline">{displayName}</span>
+            <span className="text-sm font-semibold sm:hidden">{firstName}</span>
             <ChevronDown size={16} className={`transition-transform duration-300 ${profileDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
@@ -156,7 +158,7 @@ const ChatPage = () => {
       <main className="flex-1 flex flex-col min-h-0 relative">
         
         {/* Chat Session Header */}
-        <header className="bg-white border-b border-slate-100 px-8 py-4 flex justify-between items-center shadow-sm z-10 shrink-0">
+        <header className="bg-white border-b border-slate-100 px-8 py-4 flex justify-between items-center shadow-sm z-10 shrink-0 chat-session-header">
           <div className="flex items-center gap-3">
             <div className="bg-[#00B4B4]/10 p-2.5 rounded-xl text-[#00B4B4]">
               <Sparkles size={20} />

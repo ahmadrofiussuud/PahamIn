@@ -152,7 +152,7 @@ const LandingPage = () => {
         {/* HERO RIGHT COLUMN (Matches Figma exactly with Large Student Image and Floating Badges) */}
         <div className="lg:col-span-6 flex items-center justify-center relative mt-10 lg:mt-0 select-none overflow-visible">
           
-          <div className="relative w-[620px] h-[580px] flex items-center justify-center shrink-0 scale-[0.75] sm:scale-[0.8] md:scale-[0.85] lg:scale-90 xl:scale-100 origin-top-right">
+          <div className="relative w-[620px] h-[580px] flex items-center justify-center shrink-0 scale-[0.75] sm:scale-[0.8] md:scale-[0.85] lg:scale-90 xl:scale-100 origin-top-right hero-illustration-container">
             
             {/* ============================================================
                 TALI / GARIS PENGHUBUNG — z-5 (DI BELAKANG student z-10)

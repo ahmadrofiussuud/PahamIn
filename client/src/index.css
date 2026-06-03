@@ -32,3 +32,182 @@ body {
     @apply w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00B4B4] focus:border-transparent transition-all;
   }
 }
+
+/* ==========================================
+   TABLET RESPONSIVE STYLES (max-width: 768px)
+   ========================================== */
+@media (max-width: 768px) {
+  .hero-illustration-container {
+    scale: 0.72 !important;
+    transform-origin: top center !important;
+    margin: 1rem auto 0 !important;
+    height: 420px !important;
+    width: 620px !important;
+  }
+  
+  .hero-illustration-container img[src*="tali"] {
+    display: none !important;
+  }
+  
+  .login-illustration-container,
+  .register-illustration-container {
+    display: none !important;
+  }
+}
+
+/* ==========================================
+   MOBILE RESPONSIVE STYLES (max-width: 640px)
+   ========================================== */
+@media (max-width: 640px) {
+  /* Prevent horizontal overflow */
+  html, body {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Navbar spacing and sizing optimizations on mobile to prevent overlapping */
+  nav {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    gap: 0.5rem !important;
+  }
+  
+  nav .flex.items-center.gap-3 {
+    gap: 0.35rem !important;
+  }
+  
+  nav .flex.items-center.gap-3 svg {
+    height: 28px !important;
+  }
+  
+  nav .flex.items-center.gap-3 span {
+    font-size: 1.25rem !important;
+  }
+  
+  nav .flex.items-center.gap-4 {
+    gap: 0.5rem !important;
+  }
+  
+  nav a[href*="login"], nav a[href*="register"] {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    font-size: 0.8rem !important;
+    border-radius: 8px !important;
+    min-height: 38px !important;
+  }
+
+  /* Grid Layouts collapse to single column */
+  .grid-cols-2, .grid-cols-3, .grid-cols-4, .grid-cols-12, 
+  .lg\:grid-cols-3, .lg\:grid-cols-12, .md\:grid-cols-2, .md\:grid-cols-3, .lg\:grid-cols-4 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+
+  /* Font sizes scale down slightly (reduce by 2-4px) */
+  h1, .text-5xl, .text-6xl, .text-\[4\.75rem\] {
+    font-size: 2.25rem !important;
+    line-height: 2.5rem !important;
+  }
+  h2, .text-4xl {
+    font-size: 1.65rem !important;
+    line-height: 2rem !important;
+  }
+  h3, .text-3xl {
+    font-size: 1.45rem !important;
+  }
+  h4, .text-2xl {
+    font-size: 1.2rem !important;
+  }
+
+  /* Padding and Margins reduced strictly (1.25rem -> 0.75rem) */
+  /* Target only padding classes that represent 1.25rem (p-5, px-5, py-5) or wrappers, 
+     WITHOUT affecting top margins/paddings like pt-32, pt-40 */
+  main, section, footer, .max-w-7xl, .max-w-6xl, .max-w-5xl {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .p-5, .px-5, .py-5 {
+    padding: 0.75rem !important;
+  }
+  
+  .m-5, .mx-5, .my-5, .mb-5, .mt-5 {
+    margin: 0.75rem !important;
+  }
+
+  /* Reduce general outer page margin layout gaps slightly */
+  .mb-20, .mb-24 {
+    margin-bottom: 2rem !important;
+  }
+  .mt-20, .mt-12 {
+    margin-top: 1.5rem !important;
+  }
+
+  /* Badges & Labels wrap naturally */
+  .badge, .label, span, label, p {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  /* Touch Targets for interactive buttons & links */
+  button, a.btn-primary, a.btn-secondary, .btn-primary, .btn-secondary {
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Tabs stack and wrap if they overflow */
+  .tab-container, .flex-wrap-mobile {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  
+  .tab-btn, .tab-button {
+    width: 100% !important;
+    min-height: 44px !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* Chat session header stacks on mobile */
+  .chat-session-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 0.75rem !important;
+  }
+  
+  .chat-session-header button {
+    width: 100% !important;
+    justify-content: center !important;
+    min-height: 44px !important;
+  }
+
+  /* Hero illustration styling for mobile:
+     Preserves original figma layout of badges, student, and lines
+     by scaling down the entire 620px container to fit the viewport width */
+  .hero-illustration-container {
+    scale: 0.52 !important;
+    transform-origin: top center !important;
+    margin: 1.5rem auto 0 !important;
+    height: 300px !important;
+    width: 620px !important;
+  }
+
+  .hero-illustration-container img[src*="tali"] {
+    display: none !important;
+  }
+}
+
+/* For extremely narrow screens */
+@media (max-width: 400px) {
+  .hero-illustration-container {
+    scale: 0.44 !important;
+    height: 250px !important;
+  }
+}
+
