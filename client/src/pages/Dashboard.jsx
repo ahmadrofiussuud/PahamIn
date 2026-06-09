@@ -52,8 +52,8 @@ const Dashboard = () => {
             <span className="absolute bottom-0 left-0 w-full h-1 bg-[#1E3A5F] rounded-full"></span>
           </Link>
           <Link to="/chat" className="hover:text-[#1E3A5F] transition-colors">Socratic Chat</Link>
-          <a href="#" className="hover:text-[#1E3A5F] transition-colors">Library</a>
-          <a href="#" className="hover:text-[#1E3A5F] transition-colors">Progress</a>
+          <Link to="/library" className="hover:text-[#1E3A5F] transition-colors">Library</Link>
+          <Link to="/progress" className="hover:text-[#1E3A5F] transition-colors">Progress</Link>
         </div>
 
         {/* User Profile Pill (Right) */}

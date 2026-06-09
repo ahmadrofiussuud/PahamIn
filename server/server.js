@@ -122,7 +122,7 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
 
 app.post('/api/chat/message', authenticateToken, async (req, res) => {
     try {
-        const { message, sessionId } = req.body;
+        const { message, sessionId, seedHistory } = req.body;
         const userId = req.user.id;
 
         // 1. Get or Create Session
@@ -135,6 +135,17 @@ app.post('/api/chat/message', authenticateToken, async (req, res) => {
                 .single();
             if (sError) throw sError;
             currentSessionId = newSession.id;
+
+            // Seed initial history if provided
+            if (seedHistory && Array.isArray(seedHistory)) {
+                const seedMessages = seedHistory.map(msg => ({
+                    session_id: currentSessionId,
+                    role: msg.role === 'assistant' ? 'assistant' : 'user',
+                    content: msg.content
+                }));
+                const { error: seedError } = await supabase.from('messages').insert(seedMessages);
+                if (seedError) console.error("Failed to seed initial history:", seedError);
+            }
         }
 
         // 2. Fetch History for Context
@@ -151,11 +162,18 @@ app.post('/api/chat/message', authenticateToken, async (req, res) => {
         const systemPrompt = `Kamu adalah Socratic AI tutor bernama PahamIn. 
         ATURAN WAJIB: Kamu TIDAK BOLEH memberikan jawaban langsung. Setiap kali siswa bertanya, kamu HARUS merespons dengan pertanyaan pemantik yang mendorong siswa berpikir sendiri. Selalu mulai dengan menanyakan apa yang sudah siswa ketahui tentang topik tersebut. Gunakan bahasa Indonesia yang ramah dan supportif.`;
 
-        let chat = model.startChat({
-            history: history.map(m => ({
+        // Gemini API requires chat history to start with a 'user' message.
+        // We find the first 'user' message index and slice the history from there.
+        const firstUserIdx = history.findIndex(m => m.role === 'user');
+        const geminiHistory = firstUserIdx !== -1 
+            ? history.slice(firstUserIdx).map(m => ({
                 role: m.role === 'user' ? 'user' : 'model',
                 parts: [{ text: m.content }]
-            })),
+              }))
+            : [];
+
+        let chat = model.startChat({
+            history: geminiHistory,
             generationConfig: { maxOutputTokens: 500 }
         });
 
