@@ -193,8 +193,8 @@ const ProgressPage = () => {
             <img src={imgProgress} alt="Clock" className="w-[52px] h-[52px] object-contain shrink-0" />
             <div className="text-left">
               <span className="text-xs text-slate-400 font-bold block">Waktu belajar</span>
-              <span className="text-2xl font-black text-[#1E3A5F] leading-tight block">6j 35m</span>
-              <span className="text-[11px] text-[#00B4B4] font-extrabold mt-0.5 block">↑ 1j 20m dari minggu lalu</span>
+              <span className="text-2xl font-black text-[#1E3A5F] leading-tight block">39j 45m</span>
+              <span className="text-[11px] text-[#00B4B4] font-extrabold mt-0.5 block">↑ 8j 15m dari minggu lalu</span>
             </div>
           </div>
 
@@ -380,8 +380,8 @@ const ProgressPage = () => {
                       </div>
                       <div className="flex-1">
                         <div className="flex justify-between items-center text-xs font-extrabold text-[#1E3A5F] mb-1">
-                          <span>Belajar 6 jam</span>
-                          <span className="text-[#00B4B4]">6/6</span>
+                          <span>Belajar 8 jam</span>
+                          <span className="text-[#00B4B4]">8/8</span>
                         </div>
                         <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
                           <div className="h-full bg-[#00B4B4] rounded-full" style={{ width: '100%' }}></div>
