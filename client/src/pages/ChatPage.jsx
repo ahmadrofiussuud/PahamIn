@@ -94,7 +94,7 @@ const ChatPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sessionId, setSessionId] = useState(null);
   
-  // Sync sessionId state from localStorage whenever activeTopicId or activeMode changes
+  // Sync sessionId and load history/initial messages whenever activeTopicId or activeMode changes
   useEffect(() => {
     const key = `sessionId_${activeTopicId}_${activeMode}`;
     let storedSessionId = localStorage.getItem(key);
@@ -109,7 +109,26 @@ const ChatPage = () => {
         localStorage.removeItem(oldKey);
       }
     }
+    
     setSessionId(storedSessionId || null);
+
+    if (storedSessionId) {
+      const loadHistoryDirect = async (sid) => {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await axios.get(`${API_URL}/history/${sid}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setMessages(res.data);
+        } catch (err) {
+          console.error("Failed to load history", err);
+        }
+      };
+      loadHistoryDirect(storedSessionId);
+    } else {
+      const initialMessages = getInitialHistory(activeTopicId, activeMode);
+      setMessages(initialMessages);
+    }
   }, [activeTopicId, activeMode]);
   
   const messagesEndRef = useRef(null);
@@ -287,27 +306,6 @@ const ChatPage = () => {
 
   const handleModeChange = (mode) => {
     setActiveMode(mode);
-  };
-
-  useEffect(() => {
-    if (sessionId) {
-      loadHistory();
-    } else {
-        const initialMessages = getInitialHistory(activeTopicId, activeMode);
-        setMessages(initialMessages);
-    }
-  }, [sessionId, activeTopicId, activeMode]);
-
-  const loadHistory = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/history/${sessionId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setMessages(res.data);
-    } catch (err) {
-      console.error("Failed to load history");
-    }
   };
 
   const handleTopicChange = (topicId) => {
