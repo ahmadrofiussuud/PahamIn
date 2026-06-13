@@ -73,17 +73,6 @@ const ChatPage = () => {
         { role: 'user', content: 'Kita kurangi kedua ruas dengan 4 dulu, jadi 2x = 6. Lalu dibagi 2, ketemu x = 3.' },
         { role: 'assistant', content: 'Hebat! Kamu melakukan pemindahan ruas dengan sangat logis. Mengapa kita harus melakukan operasi yang sama (seperti mengurangi 4 atau membagi 2) di kedua sisi persamaan?' }
       ]
-    },
-    { 
-      id: 'sel-dan-organel', 
-      name: 'Sel dan Organel', 
-      history: [
-        { role: 'assistant', content: 'Halo! Aku PahamIn, partner berfikirmu. Sel adalah unit terkecil kehidupan yang sangat kompleks. Ceritakan dong, apa yang sudah kamu ketahui tentang sel atau bagian-bagian di dalamnya?' },
-        { role: 'user', content: 'Sel itu ada sel tumbuhan dan sel hewan. Di dalamnya ada organel seperti nukleus yang berfungsi sebagai inti sel.' },
-        { role: 'assistant', content: 'Keren! Nukleus memang seperti "otak" yang mengatur segalanya. Nah, tumbuhan kan bisa membuat makanannya sendiri sedangkan hewan tidak. Menurutmu organel apa yang hanya ada di sel tumbuhan untuk menunjang fotosintesis tersebut?' },
-        { role: 'user', content: 'Itu kloroplas yang berisi klorofil untuk fotosintesis.' },
-        { role: 'assistant', content: 'Tepat sekali! Kloroplas adalah kuncinya. Selain kloroplas, tumbuhan juga memiliki dinding sel yang kaku. Mengapa hewan tidak memerlukan dinding sel yang kaku seperti tumbuhan?' }
-      ]
     }
   ];
 
