@@ -201,39 +201,45 @@ const LibraryPage = () => {
           </div>
 
           {/* Quick Filters */}
-          <div className="flex items-center gap-3 font-extrabold text-xs shrink-0 overflow-x-auto pb-1 select-none">
-            <button 
-              onClick={() => setActiveTab('Semua')}
-              className={`px-5 py-3 rounded-xl transition-all ${
-                activeTab === 'Semua' 
-                  ? 'bg-[#00B4B4] text-white' 
-                  : 'bg-white border border-slate-200 text-[#1E3A5F] hover:bg-slate-50'
-              }`}
-            >
-              Semua
-            </button>
-            <button 
-              onClick={() => setActiveTab('Terbaru')}
-              className={`px-5 py-3 rounded-xl border flex items-center gap-2 transition-all ${
-                activeTab === 'Terbaru' 
-                  ? 'bg-[#00B4B4] text-white border-transparent' 
-                  : 'bg-white border-slate-200 text-[#1E3A5F] hover:bg-slate-50'
-              }`}
-            >
-              <Clock size={14} />
-              <span>Terbaru</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('Tersimpan')}
-              className={`px-5 py-3 rounded-xl border flex items-center gap-2 transition-all ${
-                activeTab === 'Tersimpan' 
-                  ? 'bg-[#00B4B4] text-white border-transparent' 
-                  : 'bg-white border-slate-200 text-[#1E3A5F] hover:bg-slate-50'
-              }`}
-            >
-              <Bookmark size={14} />
-              <span>Tersimpan</span>
-            </button>
+          <div className="flex items-center gap-3 font-extrabold text-xs shrink-0 select-none">
+            
+            {/* Scrollable Tabs Wrapper */}
+            <div className="flex items-center gap-3 overflow-x-auto pb-1">
+              <button 
+                onClick={() => setActiveTab('Semua')}
+                className={`px-5 py-3 rounded-xl transition-all ${
+                  activeTab === 'Semua' 
+                    ? 'bg-[#00B4B4] text-white' 
+                    : 'bg-white border border-slate-200 text-[#1E3A5F] hover:bg-slate-50'
+                }`}
+              >
+                Semua
+              </button>
+              <button 
+                onClick={() => setActiveTab('Terbaru')}
+                className={`px-5 py-3 rounded-xl border flex items-center gap-2 transition-all ${
+                  activeTab === 'Terbaru' 
+                    ? 'bg-[#00B4B4] text-white border-transparent' 
+                    : 'bg-white border-slate-200 text-[#1E3A5F] hover:bg-slate-50'
+                }`}
+              >
+                <Clock size={14} />
+                <span>Terbaru</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab('Tersimpan')}
+                className={`px-5 py-3 rounded-xl border flex items-center gap-2 transition-all ${
+                  activeTab === 'Tersimpan' 
+                    ? 'bg-[#00B4B4] text-white border-transparent' 
+                    : 'bg-white border-slate-200 text-[#1E3A5F] hover:bg-slate-50'
+                }`}
+              >
+                <Bookmark size={14} />
+                <span>Tersimpan</span>
+              </button>
+            </div>
+
+            {/* Filter Dropdown (Moved outside overflow-x-auto to prevent CSS clipping) */}
             <div className="relative">
               <button 
                 onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
