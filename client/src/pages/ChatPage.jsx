@@ -82,6 +82,33 @@ const ChatPage = () => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sessionId, setSessionId] = useState(null);
+  const [toastMessage, setToastMessage] = useState('');
+
+  const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const cleanApiUrl = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
+  const API_URL = `${cleanApiUrl}/api/chat`;
+
+  const getInitialHistory = (topicId, mode) => {
+    const topic = topicSessions.find(t => t.id === topicId);
+    const topicName = topic ? topic.name : 'Topik ini';
+    
+    if (mode === 'guided') {
+      return [{
+        role: 'assistant',
+        content: `Halo! Kita masuk ke mode **Guided Practice** untuk topik **${topicName}**. 📚\n\nDi sini, kita akan membedah konsepnya secara perlahan dan bertahap. Sebelum mulai, apa bagian dari ${topicName} yang ingin kamu kuasai hari ini?`
+      }];
+    } else if (mode === 'latihan') {
+      return [{
+        role: 'assistant',
+        content: `Halo! Mari mulai **Latihan Soal** untuk topik **${topicName}**! ✏️\n\nAku akan memberikan soal satu per satu untuk menguji pemahamanmu. Ketik "Siap" jika kamu ingin soal pertamanya dimuat!`
+      }];
+    } else {
+      if (topic && topic.history && topic.history.length > 0) {
+        return [topic.history[0]];
+      }
+      return [];
+    }
+  };
   
   // Sync sessionId and load history/initial messages whenever activeTopicId or activeMode changes
   useEffect(() => {
@@ -260,9 +287,6 @@ const ChatPage = () => {
     );
   };
 
-  const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-  const cleanApiUrl = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
-  const API_URL = `${cleanApiUrl}/api/chat`;
   const displayName = user?.name || "Budi Saputra";
   const firstName = displayName.split(' ')[0];
 
@@ -273,25 +297,7 @@ const ChatPage = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  const getInitialHistory = (topicId, mode) => {
-    const topic = topicSessions.find(t => t.id === topicId);
-    const topicName = topic ? topic.name : 'Topik ini';
-    
-    if (mode === 'guided') {
-      return [{
-        role: 'assistant',
-        content: `Halo! Kita masuk ke mode **Guided Practice** untuk topik **${topicName}**. 📚\n\nDi sini, kita akan membedah konsepnya secara perlahan dan bertahap. Sebelum mulai, apa bagian dari ${topicName} yang ingin kamu kuasai hari ini?`
-      }];
-    } else if (mode === 'latihan') {
-      return [{
-        role: 'assistant',
-        content: `Halo! Mari mulai **Latihan Soal** untuk topik **${topicName}**! ✏️\n\nAku akan memberikan soal satu per satu untuk menguji pemahamanmu. Ketik "Siap" jika kamu ingin soal pertamanya dimuat!`
-      }];
-    } else {
-      return topic ? topic.history : [];
-    }
-  };
+  // Initial history helper moved above useEffect
 
   const handleModeChange = (mode) => {
     setActiveMode(mode);
@@ -343,11 +349,18 @@ const ChatPage = () => {
   };
 
   const resetChat = () => {
-    const key = `sessionId_${activeTopicId}_${activeMode}`;
-    localStorage.removeItem(key);
-    setSessionId(null);
-    const initialMessages = getInitialHistory(activeTopicId, activeMode);
-    setMessages(initialMessages);
+    try {
+      const key = `sessionId_${activeTopicId}_${activeMode}`;
+      localStorage.removeItem(key);
+      setSessionId(null);
+      const initialMessages = getInitialHistory(activeTopicId, activeMode);
+      setMessages(initialMessages);
+      setSidebarOpen(false);
+      setToastMessage("Sesi diskusi baru telah dimulai!");
+      setTimeout(() => setToastMessage(''), 3000);
+    } catch (err) {
+      console.error("Failed to reset chat", err);
+    }
   };
 
   const renderSidebar = (isMobile = false) => {
@@ -794,6 +807,18 @@ const ChatPage = () => {
       </div>
       <AnimatePresence>
         {showThinkingTrace && renderThinkingTraceModal()}
+      </AnimatePresence>
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-6 left-1/2 -translate-x-1/2 bg-[#00B4B4] text-white px-6 py-3 rounded-full shadow-lg font-bold text-sm z-50 flex items-center gap-2"
+          >
+            <span>✨ {toastMessage}</span>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
