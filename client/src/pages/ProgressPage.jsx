@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut, ChevronDown, User, BookOpen, Clock, Target, CheckSquare } from 'lucide-react';
 import Logo from '../components/Logo';
@@ -39,6 +39,19 @@ const CrosshairIcon = () => (
 const ProgressPage = () => {
   const { user, logout } = useAuth();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('section') === 'rekomendasi') {
+      const timer = setTimeout(() => {
+        const element = document.getElementById('rekomendasi-belajar');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   // Chart Data (Minutes studied per week)
   const actualData = [68, 155, 68, 68, 102, 110]; // Matches the navy line
@@ -270,7 +283,7 @@ const ProgressPage = () => {
             </div>
 
             {/* Card: Rekomendasi belajar */}
-            <div className="bg-white rounded-[24px] shadow-sm border border-slate-100 p-8 text-left">
+            <div id="rekomendasi-belajar" className="bg-white rounded-[24px] shadow-sm border border-slate-100 p-8 text-left">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-black text-[#1E3A5F]">Rekomendasi belajar</h3>
                 <a href="#" className="text-xs font-extrabold text-[#3B82F6] hover:underline">Lihat semua rekomendasi</a>

@@ -16,7 +16,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Gemini Setup
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
 app.use(cors());
 app.use(express.json());
@@ -172,15 +172,18 @@ app.post('/api/chat/message', authenticateToken, async (req, res) => {
               }))
             : [];
 
-        let chat = model.startChat({
+        // Set systemInstruction at the model instantiation level to ensure Socratic tutor constraints are enforced correctly
+        const socraticModel = genAI.getGenerativeModel({ 
+            model: "gemini-3.5-flash",
+            systemInstruction: systemPrompt
+        });
+
+        let chat = socraticModel.startChat({
             history: geminiHistory,
             generationConfig: { maxOutputTokens: 500 }
         });
 
-        const result = await chat.sendMessage([
-            { text: `SYSTEM_INSTRUCTION: ${systemPrompt}` },
-            { text: message }
-        ]);
+        const result = await chat.sendMessage(message);
         
         let aiResponse = result.response.text();
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LogOut, ChevronDown, User, Search, Clock, Bookmark, SlidersHorizontal, Star,
@@ -14,10 +14,12 @@ import imgDocument from '../assets/halaman library asset materi.png';
 const LibraryPage = () => {
   const { user, logout } = useAuth();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
   
   // Search & Filter States
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('Semua'); // 'Semua', 'Terbaru', 'Tersimpan'
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'Semua'); // 'Semua', 'Terbaru', 'Tersimpan'
   const [selectedCategory, setSelectedCategory] = useState('Semua'); // 'Semua', 'Matematika', 'Biologi', 'Kimia', 'Fisika'
   const [activeCollection, setActiveCollection] = useState('Dokumen'); // 'Dokumen', 'Ringkasan', 'Favorit'
 
@@ -51,9 +53,27 @@ const LibraryPage = () => {
 
   // Filter & Search Logic
   const filteredDocuments = documents.filter(doc => {
-    // 1. Search Query filter
-    const matchesSearch = doc.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          doc.category.toLowerCase().includes(searchQuery.toLowerCase());
+    // 1. Search Query filter with abbreviation mappings
+    const query = searchQuery.toLowerCase().trim();
+    let matchesSearch = true;
+    
+    if (query) {
+      const matchesName = doc.name.toLowerCase().includes(query);
+      const matchesCategory = doc.category.toLowerCase().includes(query);
+      
+      let matchesAbbrev = false;
+      if (query === 'mtk' && doc.category.toLowerCase() === 'matematika') {
+        matchesAbbrev = true;
+      } else if (query === 'bio' && doc.category.toLowerCase() === 'biologi') {
+        matchesAbbrev = true;
+      } else if (query === 'kimia' && doc.category.toLowerCase() === 'kimia') {
+        matchesAbbrev = true;
+      } else if (query === 'fisika' && doc.category.toLowerCase() === 'fisika') {
+        matchesAbbrev = true;
+      }
+      
+      matchesSearch = matchesName || matchesCategory || matchesAbbrev;
+    }
     
     // 2. Tab Filter (Semua, Terbaru, Tersimpan)
     let matchesTab = true;
@@ -214,12 +234,90 @@ const LibraryPage = () => {
               <Bookmark size={14} />
               <span>Tersimpan</span>
             </button>
-            <button 
-              className="px-5 py-3 rounded-xl border border-slate-200 bg-white text-[#1E3A5F] flex items-center gap-2 hover:bg-slate-50 transition-all"
-            >
-              <SlidersHorizontal size={14} />
-              <span>Filter</span>
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
+                className={`px-5 py-3 rounded-xl border flex items-center gap-2 hover:bg-slate-50 transition-all ${
+                  filterDropdownOpen || selectedCategory !== 'Semua' || activeCollection !== 'Dokumen'
+                    ? 'bg-[#EAF9F9] border-[#00B4B4] text-[#00B4B4]'
+                    : 'bg-white border-slate-200 text-[#1E3A5F]'
+                }`}
+              >
+                <SlidersHorizontal size={14} />
+                <span>Filter</span>
+              </button>
+
+              <AnimatePresence>
+                {filterDropdownOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-20" 
+                      onClick={() => setFilterDropdownOpen(false)}
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 p-5 z-30 text-[#1E3A5F] text-left font-bold"
+                    >
+                      <h4 className="text-sm font-black mb-3 border-b border-slate-100 pb-2 flex justify-between items-center">
+                        <span>Filter Materi</span>
+                        {(selectedCategory !== 'Semua' || activeCollection !== 'Dokumen') && (
+                          <button 
+                            onClick={() => {
+                              setSelectedCategory('Semua');
+                              setActiveCollection('Dokumen');
+                            }}
+                            className="text-xs text-red-500 hover:underline"
+                          >
+                            Reset
+                          </button>
+                        )}
+                      </h4>
+
+                      <div className="mb-4">
+                        <label className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wider block mb-2">Kategori</label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {['Semua', 'Matematika', 'Biologi', 'Kimia', 'Fisika'].map(cat => (
+                            <button
+                              key={cat}
+                              onClick={() => setSelectedCategory(cat)}
+                              className={`px-3 py-2 rounded-lg text-xs transition-all border ${
+                                selectedCategory === cat
+                                  ? 'bg-[#EAF9F9] border-[#00B4B4] text-[#00B4B4]'
+                                  : 'border-slate-100 bg-slate-50/50 hover:bg-slate-50 text-[#1E3A5F]'
+                              }`}
+                            >
+                              {cat === 'Semua' ? 'Semua' : cat}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="mb-2">
+                        <label className="text-[11px] text-slate-400 font-extrabold uppercase tracking-wider block mb-2">Koleksi</label>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {['Dokumen', 'Ringkasan', 'Favorit'].map(col => (
+                            <button
+                              key={col}
+                              onClick={() => setActiveCollection(col)}
+                              className={`px-2 py-2 rounded-lg text-xs transition-all border ${
+                                activeCollection === col
+                                  ? 'bg-[#EAF9F9] border-[#00B4B4] text-[#00B4B4]'
+                                  : 'border-slate-100 bg-slate-50/50 hover:bg-slate-50 text-[#1E3A5F]'
+                              }`}
+                            >
+                              {col}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </section>
 

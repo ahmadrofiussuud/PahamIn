@@ -130,11 +130,12 @@ const Dashboard = () => {
               <p className="text-slate-600 text-[13.5px] font-bold mt-1.5 leading-relaxed max-w-[210px]">
                 Unggah dokumen atau gambar untuk dianalisis.
               </p>
-              <button 
-                className="mt-4 bg-[#00B4B4] hover:bg-[#009c9c] text-white px-5 py-2.5 rounded-xl text-xs font-black transition-all w-fit"
+              <Link 
+                to="/chat" 
+                className="mt-4 bg-[#00B4B4] hover:bg-[#009c9c] text-white px-5 py-2.5 rounded-xl text-xs font-black transition-all w-fit text-center block"
               >
                 Upload Sekarang ➔
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -146,11 +147,12 @@ const Dashboard = () => {
               <p className="text-slate-600 text-[13.5px] font-bold mt-1.5 leading-relaxed max-w-[210px]">
                 Lanjutkan materi yang sudah kamu pelajari.
               </p>
-              <button 
-                className="mt-4 bg-[#1E3A5F] hover:bg-[#152a46] text-white px-5 py-2.5 rounded-xl text-xs font-black transition-all w-fit"
+              <Link 
+                to="/chat" 
+                className="mt-4 bg-[#1E3A5F] hover:bg-[#152a46] text-white px-5 py-2.5 rounded-xl text-xs font-black transition-all w-fit text-center block"
               >
                 Lihat Lanjutan ➔
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -164,7 +166,7 @@ const Dashboard = () => {
             <div className="flex-1 flex flex-col">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-black text-[#1E3A5F]">Aktivitas Terbaru</h3>
-                <a href="#" className="text-sm font-extrabold text-[#3B82F6] hover:underline">Lihat semua</a>
+                <Link to="/library?tab=Terbaru" className="text-sm font-extrabold text-[#3B82F6] hover:underline">Lihat semua</Link>
               </div>
 
               {/* Activity List with dotted separators */}
@@ -357,7 +359,7 @@ const Dashboard = () => {
         <section className="bg-white rounded-[24px] shadow-sm border border-slate-100 p-8 text-left">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-black text-[#1E3A5F]">Rekomendasi Untukmu</h3>
-            <a href="#" className="text-sm font-extrabold text-[#3B82F6] hover:underline">Lihat semua rekomendasi</a>
+            <Link to="/progress?section=rekomendasi" className="text-sm font-extrabold text-[#3B82F6] hover:underline">Lihat semua rekomendasi</Link>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

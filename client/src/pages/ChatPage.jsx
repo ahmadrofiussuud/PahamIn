@@ -3,9 +3,10 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Send, ChevronDown, LogOut, Search, Menu, X, Plus, Loader2, User
+  Send, ChevronDown, LogOut, Search, Menu, X, Plus, Loader2, User,
+  UploadCloud, FolderOpen, Brain, ClipboardList, FileText, Sparkles
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 
 // Import local assets
@@ -23,9 +24,16 @@ import iconPerson from '../assets/icon person.png';
 
 const ChatPage = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // States and refs for revisions
+  const [showPlusOptions, setShowPlusOptions] = useState(false);
+  const [showThinkingTrace, setShowThinkingTrace] = useState(false);
+  const fileInputRef = useRef(null);
+  const chatInputRef = useRef(null);
   
   // Topic-based sessions list with dummy chat history
   const topicSessions = [
@@ -89,9 +97,147 @@ const ChatPage = () => {
   
   const messagesEndRef = useRef(null);
 
-  const API_URL = import.meta.env.VITE_API_URL 
-    ? `${import.meta.env.VITE_API_URL}/api/chat` 
-    : 'http://localhost:5000/api/chat';
+  const handleFileUploadClick = () => {
+    setShowPlusOptions(false);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setMessages(prev => [...prev, { role: 'user', content: `[Mengunggah dokumen: ${file.name}]` }]);
+    setLoading(true);
+    setShowPlusOptions(false);
+
+    setTimeout(() => {
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: `Wah, dokumen **${file.name}** berhasil diunggah! 📁\n\nBerdasarkan isi dokumen tersebut, mari kita diskusikan bersama. Apa yang ingin kamu tanyakan atau bagian mana yang menurutmu paling sulit dipahami dari materi ini?` 
+      }]);
+      setLoading(false);
+    }, 1200);
+
+    e.target.value = '';
+  };
+
+  const handleOptionLatihanSoal = () => {
+    setShowPlusOptions(false);
+    setInput("Tolong buatkan beberapa soal latihan mengenai topik ini dong!");
+    chatInputRef.current?.focus();
+  };
+
+  const handleOptionRingkasan = () => {
+    setShowPlusOptions(false);
+    setInput("Bisa tolong buatkan ringkasan materi dari diskusi kita ini?");
+    chatInputRef.current?.focus();
+  };
+
+  const renderThinkingTraceModal = () => {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        {/* Backdrop */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.6 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setShowThinkingTrace(false)}
+          className="absolute inset-0 bg-[#0f172a]"
+        />
+        
+        {/* Modal Container */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative z-10 border border-slate-100 text-[#1E3A5F] text-left max-h-[90vh] overflow-y-auto"
+        >
+          {/* Header */}
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-[#EAF9F9] flex items-center justify-center text-[#00B4B4]">
+                <Brain size={20} />
+              </div>
+              <h3 className="text-lg font-black font-sans">AI Thinking Trace</h3>
+            </div>
+            <button 
+              onClick={() => setShowThinkingTrace(false)}
+              className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <p className="text-xs text-slate-500 font-bold mb-6 leading-relaxed font-sans">
+            Ini adalah alur penalaran pedagogis Socratic yang digunakan PahamIn untuk membantumu memahami konsep secara mandiri tanpa langsung menyontek jawaban.
+          </p>
+
+          <div className="space-y-6 relative before:absolute before:left-[17px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100 font-sans">
+            <div className="flex gap-4 relative">
+              <div className="w-9 h-9 rounded-full bg-[#EAF9F9] border-2 border-white flex items-center justify-center text-[#00B4B4] font-black text-sm z-10 shadow-sm shrink-0">
+                1
+              </div>
+              <div>
+                <h5 className="text-sm font-black">Tahap 1: Asesmen Pengetahuan Awal</h5>
+                <p className="text-xs text-slate-500 font-bold mt-1 leading-relaxed">
+                  AI mendeteksi sejauh mana pemahamanmu tentang topik ini. Pertanyaan dirancang untuk membuka memori jangka panjangmu.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 relative">
+              <div className="w-9 h-9 rounded-full bg-[#EBF5FF] border-2 border-white flex items-center justify-center text-blue-500 font-black text-sm z-10 shadow-sm shrink-0">
+                2
+              </div>
+              <div>
+                <h5 className="text-sm font-black">Tahap 2: Pemberian Pertanyaan Pemantik</h5>
+                <p className="text-xs text-slate-500 font-bold mt-1 leading-relaxed">
+                  Alih-alih memberikan rumus/solusi langsung, AI menyusun pertanyaan bertingkat yang menantang miskonsepsi secara halus.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 relative">
+              <div className="w-9 h-9 rounded-full bg-[#F5F3FF] border-2 border-white flex items-center justify-center text-purple-500 font-black text-sm z-10 shadow-sm shrink-0">
+                3
+              </div>
+              <div>
+                <h5 className="text-sm font-black">Tahap 3: Konstruksi Mandiri (Scaffolding)</h5>
+                <p className="text-xs text-slate-500 font-bold mt-1 leading-relaxed">
+                  Siswa dibimbing untuk menyatukan potongan petunjuk dan menarik kesimpulan matematis/sains secara logis.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 relative">
+              <div className="w-9 h-9 rounded-full bg-[#FFF9E6] border-2 border-white flex items-center justify-center text-amber-500 font-black text-sm z-10 shadow-sm shrink-0">
+                4
+              </div>
+              <div>
+                <h5 className="text-sm font-black">Tahap 4: Penguatan & Umpan Balik Positif</h5>
+                <p className="text-xs text-slate-500 font-bold mt-1 leading-relaxed">
+                  AI merayakan keberhasilan berpikirmu, meringkas kesimpulanmu, dan memberikan pemantik baru untuk topik lanjutan.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 font-sans">
+            <button 
+              onClick={() => setShowThinkingTrace(false)}
+              className="w-full py-3 bg-[#1E3A5F] hover:bg-[#152a46] text-white rounded-xl font-black text-sm transition-all shadow-sm"
+            >
+              Tutup & Lanjutkan Belajar
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  };
+
+  const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const cleanApiUrl = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
+  const API_URL = `${cleanApiUrl}/api/chat`;
   const displayName = user?.name || "Budi Saputra";
   const firstName = displayName.split(' ')[0];
 
@@ -481,10 +627,105 @@ const ChatPage = () => {
               className="max-w-4xl mx-auto relative flex items-center"
             >
               <div className="w-full bg-white border border-slate-200 shadow-sm rounded-2xl flex items-center px-4 py-3 gap-3">
-                <Plus size={20} className="text-[#00B4B4] cursor-pointer flex-shrink-0 hover:scale-110 transition-transform" />
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileUpload} 
+                  className="hidden" 
+                />
+
+                <div className="relative flex items-center justify-center shrink-0">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowPlusOptions(!showPlusOptions);
+                    }}
+                    className={`p-1.5 rounded-xl transition-all hover:bg-slate-50 ${
+                      showPlusOptions ? 'bg-[#EAF9F9] text-[#00B4B4]' : 'text-slate-400'
+                    }`}
+                  >
+                    <Plus 
+                      size={20} 
+                      className={`transition-transform duration-200 ${showPlusOptions ? 'rotate-45 text-[#00B4B4]' : 'text-[#00B4B4]'}`} 
+                    />
+                  </button>
+
+                  <AnimatePresence>
+                    {showPlusOptions && (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-20" 
+                          onClick={() => setShowPlusOptions(false)}
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute bottom-12 left-0 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-30 text-[#1E3A5F] text-left font-bold text-sm flex flex-col gap-1"
+                        >
+                          <button
+                            type="button"
+                            onClick={handleFileUploadClick}
+                            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-50 transition-colors text-left"
+                          >
+                            <UploadCloud size={16} className="text-[#00B4B4]" />
+                            <span>Upload Dokumen</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowPlusOptions(false);
+                              navigate('/library');
+                            }}
+                            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-50 transition-colors text-left"
+                          >
+                            <FolderOpen size={16} className="text-[#00B4B4]" />
+                            <span>Pilih dari Library</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowPlusOptions(false);
+                              setShowThinkingTrace(true);
+                            }}
+                            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-50 transition-colors text-left"
+                          >
+                            <Brain size={16} className="text-[#00B4B4]" />
+                            <span>Lihat Thinking Trace</span>
+                          </button>
+
+                          <div className="h-px bg-slate-100 my-1" />
+
+                          <button
+                            type="button"
+                            onClick={handleOptionLatihanSoal}
+                            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-50 transition-colors text-left"
+                          >
+                            <ClipboardList size={16} className="text-[#00B4B4]" />
+                            <span>Buat Latihan Soal</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleOptionRingkasan}
+                            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-slate-50 transition-colors text-left"
+                          >
+                            <FileText size={16} className="text-[#00B4B4]" />
+                            <span>Buat Ringkasan</span>
+                          </button>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
                 
                 <input 
                   type="text"
+                  ref={chatInputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Tanyakan sesuatu pada Pahamin..."
@@ -508,6 +749,9 @@ const ChatPage = () => {
 
         </main>
       </div>
+      <AnimatePresence>
+        {showThinkingTrace && renderThinkingTraceModal()}
+      </AnimatePresence>
     </div>
   );
 };
