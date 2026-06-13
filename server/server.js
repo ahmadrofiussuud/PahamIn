@@ -122,7 +122,7 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
 
 app.post('/api/chat/message', authenticateToken, async (req, res) => {
     try {
-        const { message, sessionId, seedHistory } = req.body;
+        const { message, sessionId, seedHistory, mode, topic } = req.body;
         const userId = req.user.id;
 
         // 1. Get or Create Session
@@ -155,22 +155,81 @@ app.post('/api/chat/message', authenticateToken, async (req, res) => {
             .eq('session_id', currentSessionId)
             .order('created_at', { ascending: true });
 
+        console.log("SESSION ID:", currentSessionId);
+        console.log("FETCHED HISTORY:", JSON.stringify(history, null, 2));
+
         // Count user messages
-        const userMsgCount = history.filter(m => m.role === 'user').length;
+        const userMsgCount = history ? history.filter(m => m.role === 'user').length : 0;
 
-        // 3. Prepare AI Request
-        const systemPrompt = `Kamu adalah Socratic AI tutor bernama PahamIn. 
-        ATURAN WAJIB: Kamu TIDAK BOLEH memberikan jawaban langsung. Setiap kali siswa bertanya, kamu HARUS merespons dengan pertanyaan pemantik yang mendorong siswa berpikir sendiri. Selalu mulai dengan menanyakan apa yang sudah siswa ketahui tentang topik tersebut. Gunakan bahasa Indonesia yang ramah dan supportif.`;
+        // 3. Prepare AI Request based on Mode & Topic
+        const activeTopic = topic || 'Topik yang sedang dipilih';
+        const activeMode = mode || 'socratic';
+        
+        let systemPrompt = `Kamu adalah Socratic AI tutor bernama PahamIn. Saat ini kamu mendampingi siswa untuk mempelajari topik "${activeTopic}".
+        
+        ATURAN UTAMA:
+        1. JANGAN PERNAH memberikan jawaban langsung atas pertanyaan materi atau konsep "${activeTopic}". Kamu HARUS memandu siswa menggunakan metode Tanya-Jawab Sokrates (Socratic) dengan memberikan pertanyaan pemantik secara bertahap agar siswa dapat menemukan jawaban secara mandiri.
+        2. SELALU gunakan bahasa Indonesia yang ramah, sopan, dan santun. JANGAN PERNAH menjawab dalam bahasa Inggris atau menyisipkan template instruksi bahasa Inggris ke dalam respon.
+        
+        PENGECUALIAN ATURAN (PENTING):
+        Jika siswa bertanya khusus tentang bagaimana MEKANISME diskusi ini berlangsung atau SAMPAI KAPAN diskusi ini akan berjalan, kamu WAJIB (dan diperbolehkan) memberikan penjelasan langsung secara ramah dalam bahasa Indonesia:
+        - Jelaskan bahwa mekanismenya menggunakan metode Sokrates (tanya-jawab terbimbing secara bertahap).
+        - Jelaskan bahwa diskusi akan berlangsung secara interaktif sampai siswa memahami topik tersebut dan dapat merumuskan kesimpulan mandiri (biasanya setelah 4 pertukaran pesan, siswa akan diminta menyimpulkan pemahamannya sendiri).`;
 
-        // Gemini API requires chat history to start with a 'user' message.
-        // We find the first 'user' message index and slice the history from there.
-        const firstUserIdx = history.findIndex(m => m.role === 'user');
-        const geminiHistory = firstUserIdx !== -1 
-            ? history.slice(firstUserIdx).map(m => ({
-                role: m.role === 'user' ? 'user' : 'model',
-                parts: [{ text: m.content }]
-              }))
-            : [];
+        if (activeMode === 'guided') {
+            systemPrompt = `Kamu adalah AI tutor PahamIn dalam mode Guided Practice untuk mempelajari topik "${activeTopic}".
+            
+            ATURAN UTAMA:
+            1. Tugasmu adalah membantu siswa memahami konsep secara terpandu dan bertahap. Jelaskan konsep dasar dengan bahasa yang mudah dipahami, lalu berikan contoh sederhana, dan ajak siswa mengerjakan latihan terbimbing langkah demi langkah. Berikan bantuan/clues jika siswa mengalami kesulitan, dan puji kemajuan mereka.
+            2. SELALU gunakan bahasa Indonesia yang ramah, sopan, dan santun. JANGAN PERNAH menjawab dalam bahasa Inggris atau menyisipkan template instruksi bahasa Inggris ke dalam respon.
+            
+            PENGECUALIAN ATURAN (PENTING):
+            Jika siswa bertanya khusus tentang bagaimana MEKANISME diskusi ini berlangsung atau SAMPAI KAPAN diskusi ini akan berjalan, kamu WAJIB memberikan penjelasan langsung secara ramah dalam bahasa Indonesia:
+            - Jelaskan bahwa mekanismenya adalah bimbingan terpandu (Guided Practice), di mana AI menjelaskan konsep dasar secara bertahap, memberikan contoh, dan memandu pengerjaan latihan langkah demi langkah.
+            - Jelaskan bahwa diskusi akan berlangsung sampai siswa menguasai konsep/sub-topik tersebut atau sampai siswa merasa cukup dan ingin beralih ke sub-topik lain.`;
+        } else if (activeMode === 'latihan') {
+            systemPrompt = `Kamu adalah AI tutor PahamIn dalam mode Latihan Soal untuk topik "${activeTopic}".
+            
+            ATURAN UTAMA:
+            1. Tugasmu adalah membuatkan latihan soal interaktif untuk menguji pemahaman siswa tentang topik yang dibahas. Berikan soal satu per satu (jangan langsung memberikan banyak soal sekaligus). Tunggu siswa menjawab, evaluasi jawabannya dengan detail (jelaskan letak kesalahan jika ada), lalu berikan soal latihan berikutnya.
+            2. SELALU gunakan bahasa Indonesia yang ramah, sopan, dan santun. JANGAN PERNAH menjawab dalam bahasa Inggris atau menyisipkan template instruksi bahasa Inggris ke dalam respon.
+            
+            PENGECUALIAN ATURAN (PENTING):
+            Jika siswa bertanya khusus tentang bagaimana MEKANISME diskusi ini berlangsung atau SAMPAI KAPAN diskusi ini akan berjalan, kamu WAJIB memberikan penjelasan langsung secara ramah dalam bahasa Indonesia:
+            - Jelaskan bahwa mekanismenya adalah pengerjaan Latihan Soal interaktif secara bertahap, di mana AI memberikan soal satu per satu, mengevaluasi jawaban siswa, dan memberikan pembahasan jika ada kesalahan.
+            - Diskusi berlangsung sampai semua latihan soal diselesaikan dengan baik atau sampai siswa memutuskan untuk berhenti berlatih.`;
+        }
+
+        // Gemini API requires chat history to start with a 'user' message and strictly alternate.
+        // We build a robust geminiHistory representation.
+        const geminiHistory = [];
+        let expectedRole = 'user';
+        
+        for (const msg of history) {
+            const currentRole = msg.role === 'user' ? 'user' : 'model';
+            
+            // Skip leading assistant messages until we hit the first user message
+            if (geminiHistory.length === 0 && currentRole !== 'user') {
+                continue;
+            }
+            
+            if (currentRole === expectedRole) {
+                geminiHistory.push({
+                    role: currentRole,
+                    parts: [{ text: msg.content }]
+                });
+                expectedRole = expectedRole === 'user' ? 'model' : 'user';
+            } else if (geminiHistory.length > 0) {
+                // If we get consecutive messages of the same role, append the text to avoid role mismatch errors
+                const lastMsg = geminiHistory[geminiHistory.length - 1];
+                lastMsg.parts[0].text += "\n" + msg.content;
+            }
+        }
+        
+        // Ensure the history ends with 'model' so that chat.sendMessage can append a user message safely
+        while (geminiHistory.length > 0 && geminiHistory[geminiHistory.length - 1].role !== 'model') {
+            geminiHistory.pop();
+        }
 
         // Set systemInstruction at the model instantiation level to ensure Socratic tutor constraints are enforced correctly
         const socraticModel = genAI.getGenerativeModel({ 
@@ -187,8 +246,8 @@ app.post('/api/chat/message', authenticateToken, async (req, res) => {
         
         let aiResponse = result.response.text();
 
-        // 4. Logic: Every 4 user messages, inject conclusion prompt
-        if (userMsgCount + 1 >= 4) {
+        // 4. Logic: Every 4 user messages, inject conclusion prompt (only for Socratic mode)
+        if (activeMode === 'socratic' && userMsgCount + 1 >= 4) {
             aiResponse += "\n\nBerdasarkan diskusi kita, coba simpulkan pemahamanmu sendiri ya!";
         }
 

@@ -48,7 +48,8 @@ const ChatPage = () => {
         { role: 'assistant', content: 'Kamu hebat!. Untuk segitiga siku-siku sisi mana yang disebut sisi depan, sisi samping, dan sisi miring?' },
         { role: 'user', content: 'Sisi depan adalah sisi yang berhadapan dengan sudut, sisi samping yang berdekatan, dan sisi miring adalah hipotenusa.' },
         { role: 'assistant', content: 'Tepat sekali!. Sekarang bagaimana kamu menggunakan perbandingan ini untuk mencari panjang salah satu sisi?' },
-        { role: 'user', content: 'Aku pilih perbandingan yang sesuai, lalu substitusi nilai yang diketahui untuk mencari sisi yang belum diketahui.' }
+        { role: 'user', content: 'Aku pilih perbandingan yang sesuai, lalu substitusi nilai yang diketahui untuk mencari sisi yang belum diketahui.' },
+        { role: 'assistant', content: 'Bagus sekali! Kamu sudah memahami konsep dasar Trigonometri dengan baik. Sekarang, apakah kamu ingin mencoba latihan soal atau ada bagian tertentu yang ingin kita bahas lebih lanjut?' }
       ]
     },
     { 
@@ -91,9 +92,25 @@ const ChatPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sessionId, setSessionId] = useState(() => {
-    return localStorage.getItem('sessionId_trigonometri') || null;
-  });
+  const [sessionId, setSessionId] = useState(null);
+  
+  // Sync sessionId state from localStorage whenever activeTopicId or activeMode changes
+  useEffect(() => {
+    const key = `sessionId_${activeTopicId}_${activeMode}`;
+    let storedSessionId = localStorage.getItem(key);
+    
+    // Auto-migration: if in Socratic mode and no new key exists, check old key format
+    if (!storedSessionId && activeMode === 'socratic') {
+      const oldKey = `sessionId_${activeTopicId}`;
+      const oldSession = localStorage.getItem(oldKey);
+      if (oldSession) {
+        storedSessionId = oldSession;
+        localStorage.setItem(key, oldSession);
+        localStorage.removeItem(oldKey);
+      }
+    }
+    setSessionId(storedSessionId || null);
+  }, [activeTopicId, activeMode]);
   
   const messagesEndRef = useRef(null);
 
@@ -249,14 +266,37 @@ const ChatPage = () => {
     scrollToBottom();
   }, [messages]);
 
+  const getInitialHistory = (topicId, mode) => {
+    const topic = topicSessions.find(t => t.id === topicId);
+    const topicName = topic ? topic.name : 'Topik ini';
+    
+    if (mode === 'guided') {
+      return [{
+        role: 'assistant',
+        content: `Halo! Kita masuk ke mode **Guided Practice** untuk topik **${topicName}**. 📚\n\nDi sini, kita akan membedah konsepnya secara perlahan dan bertahap. Sebelum mulai, apa bagian dari ${topicName} yang ingin kamu kuasai hari ini?`
+      }];
+    } else if (mode === 'latihan') {
+      return [{
+        role: 'assistant',
+        content: `Halo! Mari mulai **Latihan Soal** untuk topik **${topicName}**! ✏️\n\nAku akan memberikan soal satu per satu untuk menguji pemahamanmu. Ketik "Siap" jika kamu ingin soal pertamanya dimuat!`
+      }];
+    } else {
+      return topic ? topic.history : [];
+    }
+  };
+
+  const handleModeChange = (mode) => {
+    setActiveMode(mode);
+  };
+
   useEffect(() => {
     if (sessionId) {
       loadHistory();
     } else {
-        const topic = topicSessions.find(t => t.id === activeTopicId);
-        setMessages(topic ? topic.history : []);
+        const initialMessages = getInitialHistory(activeTopicId, activeMode);
+        setMessages(initialMessages);
     }
-  }, [sessionId, activeTopicId]);
+  }, [sessionId, activeTopicId, activeMode]);
 
   const loadHistory = async () => {
     try {
@@ -272,8 +312,6 @@ const ChatPage = () => {
 
   const handleTopicChange = (topicId) => {
     setActiveTopicId(topicId);
-    const storedSessionId = localStorage.getItem(`sessionId_${topicId}`);
-    setSessionId(storedSessionId || null);
     setSidebarOpen(false);
   };
 
@@ -290,15 +328,15 @@ const ChatPage = () => {
       const token = localStorage.getItem('token');
       const reqData = {
         message: userMessage,
-        sessionId: sessionId
+        sessionId: sessionId,
+        mode: activeMode,
+        topic: topicSessions.find(t => t.id === activeTopicId)?.name || 'Trigonometri'
       };
 
       // Seed initial dummy history if starting a new session
       if (!sessionId) {
-        const topic = topicSessions.find(t => t.id === activeTopicId);
-        if (topic && topic.history) {
-          reqData.seedHistory = topic.history;
-        }
+        const initialHistory = getInitialHistory(activeTopicId, activeMode);
+        reqData.seedHistory = initialHistory;
       }
 
       const res = await axios.post(`${API_URL}/message`, reqData, {
@@ -308,7 +346,7 @@ const ChatPage = () => {
       setMessages(prev => [...prev, { role: 'assistant', content: res.data.response }]);
       if (!sessionId) {
           setSessionId(res.data.sessionId);
-          localStorage.setItem(`sessionId_${activeTopicId}`, res.data.sessionId);
+          localStorage.setItem(`sessionId_${activeTopicId}_${activeMode}`, res.data.sessionId);
       }
     } catch (err) {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Duh, ada gangguan koneksi nih. Coba lagi nanti ya!' }]);
@@ -317,21 +355,12 @@ const ChatPage = () => {
     }
   };
 
-  const resetChat = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post(`${API_URL}/reset`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      localStorage.removeItem(`sessionId_${activeTopicId}`);
-      setSessionId(res.data.sessionId);
-      localStorage.setItem(`sessionId_${activeTopicId}`, res.data.sessionId);
-      
-      const topic = topicSessions.find(t => t.id === activeTopicId);
-      setMessages(topic ? topic.history : []);
-    } catch (err) {
-      alert("Gagal mereset chat");
-    }
+  const resetChat = () => {
+    const key = `sessionId_${activeTopicId}_${activeMode}`;
+    localStorage.removeItem(key);
+    setSessionId(null);
+    const initialMessages = getInitialHistory(activeTopicId, activeMode);
+    setMessages(initialMessages);
   };
 
   const renderSidebar = (isMobile = false) => {
@@ -374,9 +403,9 @@ const ChatPage = () => {
                   placeholder="Cari Diskusi" 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#00B4B4] text-[#1E3A5F] placeholder-[#00B4B4] font-extrabold text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#00B4B4] focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 text-[#1E3A5F] placeholder-slate-400 font-extrabold text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#00B4B4] focus:border-transparent transition-all"
                 />
-                <Search className="absolute left-3.5 top-3.5 text-[#00B4B4]" size={16} />
+                <Search className="absolute left-3.5 top-3.5 text-slate-400" size={16} />
               </div>
               
               {/* List of Sessions */}
@@ -390,7 +419,7 @@ const ChatPage = () => {
                       className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border font-extrabold text-sm transition-all text-left ${
                         isActive 
                           ? 'bg-[#EAF9F9] border-[#00B4B4] text-[#00B4B4]' 
-                          : 'border-[#00B4B4] text-[#1E3A5F] hover:bg-[#00B4B4]/5 bg-white'
+                          : 'border-slate-200 text-[#1E3A5F] hover:bg-slate-50 bg-white'
                       }`}
                     >
                       <img src={assetChat} alt="Chat" className="w-[18px] h-[18px] object-contain" />
@@ -414,33 +443,33 @@ const ChatPage = () => {
             </div>
             <div className="space-y-2.5">
               <button
-                onClick={() => setActiveMode('socratic')}
+                onClick={() => handleModeChange('socratic')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border font-extrabold text-sm transition-all text-left ${
                   activeMode === 'socratic' 
                     ? 'bg-[#EAF9F9] border-[#00B4B4] text-[#00B4B4]' 
-                    : 'border-[#00B4B4] text-[#1E3A5F] hover:bg-[#00B4B4]/5 bg-white'
+                    : 'border-slate-200 text-[#1E3A5F] hover:bg-slate-50 bg-white'
                 }`}
               >
                 <img src={assetSocratic} alt="Socratic" className="w-[18px] h-[18px] object-contain" />
                 <span>Socratic</span>
               </button>
               <button
-                onClick={() => setActiveMode('guided')}
+                onClick={() => handleModeChange('guided')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border font-extrabold text-sm transition-all text-left ${
                   activeMode === 'guided' 
                     ? 'bg-[#EAF9F9] border-[#00B4B4] text-[#00B4B4]' 
-                    : 'border-[#00B4B4] text-[#1E3A5F] hover:bg-[#00B4B4]/5 bg-white'
+                    : 'border-slate-200 text-[#1E3A5F] hover:bg-slate-50 bg-white'
                 }`}
               >
                 <img src={assetGuided} alt="Guided Practice" className="w-[18px] h-[18px] object-contain" />
                 <span>Guided Practice</span>
               </button>
               <button
-                onClick={() => setActiveMode('latihan')}
+                onClick={() => handleModeChange('latihan')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border font-extrabold text-sm transition-all text-left ${
                   activeMode === 'latihan' 
                     ? 'bg-[#EAF9F9] border-[#00B4B4] text-[#00B4B4]' 
-                    : 'border-[#00B4B4] text-[#1E3A5F] hover:bg-[#00B4B4]/5 bg-white'
+                    : 'border-slate-200 text-[#1E3A5F] hover:bg-slate-50 bg-white'
                 }`}
               >
                 <img src={assetLatihanSoal} alt="Latihan Soal" className="w-[18px] h-[18px] object-contain" />
@@ -561,7 +590,34 @@ const ChatPage = () => {
         </AnimatePresence>
 
         {/* RIGHT CHAT AREA */}
-        <main className="flex-1 bg-[#EEF4FC] flex flex-col min-h-0 relative">
+        <main className="flex-1 bg-white rounded-3xl shadow-sm border border-slate-100 flex flex-col min-h-0 relative overflow-hidden">
+          
+          {/* Active Session Header */}
+          <div className="px-6 py-4.5 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#EAF9F9] flex items-center justify-center text-[#00B4B4] font-black">
+                📚
+              </div>
+              <div className="text-left font-sans">
+                <h3 className="text-[15px] font-black text-[#1E3A5F]">
+                  {topicSessions.find(t => t.id === activeTopicId)?.name || 'Diskusi Belajar'}
+                </h3>
+                <p className="text-[11px] text-[#00B4B4] font-extrabold flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00B4B4] animate-pulse" />
+                  {activeMode === 'socratic' && 'Socratic Tutor Aktif'}
+                  {activeMode === 'guided' && 'Guided Practice Aktif'}
+                  {activeMode === 'latihan' && 'Mode Latihan Soal Aktif'}
+                </p>
+              </div>
+            </div>
+
+            <button 
+              onClick={resetChat}
+              className="text-xs font-black text-slate-400 hover:text-slate-600 border border-slate-200 hover:border-slate-300 px-3.5 py-1.5 rounded-xl transition-all font-sans"
+            >
+              Reset Diskusi
+            </button>
+          </div>
           
           {/* Message Thread Scrollable List */}
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-6 flex flex-col min-h-0">

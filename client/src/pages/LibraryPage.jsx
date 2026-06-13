@@ -29,12 +29,10 @@ const LibraryPage = () => {
 
   // Document List State
   const [documents, setDocuments] = useState([
-    { id: 1, name: 'Segitiga siku-siku.pdf', category: 'Matematika', size: '2.4 MB', date: '12 Mei 2025', isFavorite: true, isSaved: true, color: 'bg-[#1E3A5F] text-white' },
-    { id: 2, name: 'Fotosintesis-Biologi.pdf', category: 'Biologi', size: '3.1 MB', date: '11 Mei 2025', isFavorite: false, isSaved: false, color: 'bg-[#1E3A5F] text-white' },
-    { id: 3, name: 'Fungsi kuadrat.pdf', category: 'Matematika', size: '1.9 MB', date: '10 Mei 2025', isFavorite: false, isSaved: true, color: 'bg-[#1E3A5F] text-white' },
-    { id: 4, name: 'Stoikiometri dasar.pdf', category: 'Kimia', size: '2.7 MB', date: '9 Mei 2025', isFavorite: false, isSaved: false, color: 'bg-[#1E3A5F] text-white' },
-    { id: 5, name: 'Hukum newton.pdf', category: 'Fisika', size: '2.2 MB', date: '8 Mei 2025', isFavorite: false, isSaved: false, color: 'bg-[#1E3A5F] text-white' },
-    { id: 6, name: 'Sistem pernapasan.pdf', category: 'Biologi', size: '2.8 MB', date: '7 Mei 2025', isFavorite: false, isSaved: false, color: 'bg-[#1E3A5F] text-white' }
+    { id: 1, name: 'materi matematika.pdf', category: 'Matematika', size: '4.8 MB', date: '13 Juni 2026', isFavorite: true, isSaved: true, color: 'bg-[#1E3A5F] text-white' },
+    { id: 2, name: 'materi biologi.pdf', category: 'Biologi', size: '3.8 MB', date: '13 Juni 2026', isFavorite: false, isSaved: false, color: 'bg-[#1E3A5F] text-white' },
+    { id: 3, name: 'materi kimia.pdf', category: 'Kimia', size: '2.7 MB', date: '13 Juni 2026', isFavorite: false, isSaved: false, color: 'bg-[#1E3A5F] text-white' },
+    { id: 4, name: 'materi fisika.pdf', category: 'Fisika', size: '2.7 MB', date: '13 Juni 2026', isFavorite: false, isSaved: false, color: 'bg-[#1E3A5F] text-white' }
   ]);
 
   // Toggle favorite status
@@ -437,7 +435,12 @@ const LibraryPage = () => {
                             : 'bg-white border-dashed border-slate-200 hover:shadow-sm'
                         }`}
                       >
-                        <div className="flex items-center gap-4 min-w-0">
+                        <a 
+                          href={`/documents/${doc.name}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-4 min-w-0 cursor-pointer hover:opacity-80 transition-opacity flex-1 pr-4"
+                        >
                           {/* File Icon */}
                           <img src={imgDocument} alt="Document" className="w-[60px] h-[60px] object-contain shrink-0" />
                           
@@ -457,7 +460,7 @@ const LibraryPage = () => {
                               <span className="text-[11px] text-slate-400 font-bold">{doc.date}</span>
                             </div>
                           </div>
-                        </div>
+                        </a>
 
                         {/* Action Buttons */}
                         <div className="flex items-center gap-2.5">
