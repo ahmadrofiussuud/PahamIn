@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, DEMO_USERS } from '../context/AuthContext';
 import { motion } from 'framer-motion';
-import { AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
+import { AlertCircle, Loader2, Eye, EyeOff, UserCheck, Sparkles, ArrowRight } from 'lucide-react';
 import Logo from '../components/Logo';
 import heroImg from '../assets/ilustrasi belajar.png';
 import starImg from '../assets/Vector.png';
@@ -15,8 +15,13 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, loginAsDemo } = useAuth();
   const navigate = useNavigate();
+
+  const handleDemoLogin = (demoUser) => {
+    loginAsDemo(demoUser);
+    navigate('/dashboard');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -175,11 +180,56 @@ const LoginPage = () => {
             className="w-full max-w-[480px] bg-white rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 p-8 sm:p-12"
           >
             {/* Header Text */}
-            <div className="mb-8">
+            <div className="mb-6">
               <h2 className="text-3xl font-extrabold text-[#1E3A5F] tracking-tight">Masuk ke PahamIn</h2>
               <p className="text-slate-500 text-sm font-semibold mt-2">
                 Selamat datang kembali, Yuk lanjutkan perjalanan belajarmu!
               </p>
+            </div>
+
+            {/* QUICK AUTO LOGIN DEMO PROFILES */}
+            <div className="mb-8 p-4 bg-gradient-to-r from-blue-50/80 via-teal-50/80 to-indigo-50/80 border border-teal-100/80 rounded-2xl">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles size={18} className="text-[#00B4B4] animate-pulse" />
+                <span className="text-xs font-bold uppercase tracking-wider text-[#1E3A5F]">
+                  Auto Login (Pilih Profil Murid)
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-2.5">
+                {DEMO_USERS.map((demoUser) => (
+                  <button
+                    key={demoUser.id}
+                    type="button"
+                    onClick={() => handleDemoLogin(demoUser)}
+                    className="flex items-center justify-between p-3 bg-white hover:bg-teal-50/50 border border-slate-200/80 hover:border-[#00B4B4] rounded-xl transition-all duration-200 shadow-sm hover:shadow group text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl select-none">{demoUser.avatar}</span>
+                      <div>
+                        <div className="font-bold text-sm text-[#1E3A5F] group-hover:text-[#00B4B4] transition-colors">
+                          {demoUser.name}
+                        </div>
+                        <div className="text-xs text-slate-500 font-medium">
+                          {demoUser.grade} • {demoUser.email}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs font-bold text-[#00B4B4] opacity-80 group-hover:opacity-100 transition-opacity">
+                      <span>Masuk</span>
+                      <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative my-6 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200"></div>
+              </div>
+              <span className="relative px-3 bg-white text-xs font-bold text-slate-400 uppercase tracking-wider">
+                atau masuk manual
+              </span>
             </div>
 
             {/* Error Message */}
