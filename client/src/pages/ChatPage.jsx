@@ -35,7 +35,83 @@ const ChatPage = () => {
   const fileInputRef = useRef(null);
   const chatInputRef = useRef(null);
   
-  // Topic-based sessions list with dummy chat history
+  // Account-specific multi-turn dummy chat histories for demo users
+  const ACCOUNT_DEMO_HISTORIES = {
+    'demo-murid-a': {
+      // Budi Santoso (SMA Kelas 11 - IPA)
+      trigonometri: [
+        { role: 'assistant', content: 'Halo Budi! Aku PahamIn, partner berfikirmu. Topik hari ini adalah **Trigonometri (SMA Kelas 11)**. Ceritakan sedikit dong, apa yang sudah kamu pahami tentang perbandingan Trigonometri?' },
+        { role: 'user', content: 'Setahu aku Trigonometri itu perbandingan sisi pada segitiga siku-siku, seperti Sinus, Cosinus, dan Tangen.' },
+        { role: 'assistant', content: 'Betul sekali! Kamu hebat 👏. Sekarang coba ingat lagi, untuk sudut $\\theta$, sisi mana saja yang disebut sisi depan, sisi samping, dan sisi miring (hipotenusa)?' },
+        { role: 'user', content: 'Sisi depan itu di hadapan sudut, sisi samping yang nempel sudut, dan sisi miring adalah sisi paling panjang (hipotenusa).' },
+        { role: 'assistant', content: 'Tepat 100%! Nah, jika sebuah tangga disandarkan ke dinding membentuk sudut $60^\\circ$ dan panjang tangganya 4 meter, perbandingan manakah yang kamu gunakan untuk mencari tinggi dinding?' },
+        { role: 'user', content: 'Kita pakai Sinus! Karena $\\sin(60^\\circ) = \\frac{\\text{sisi depan (tinggi)}}{\\text{sisi miring (tangga)}}$.' },
+        { role: 'assistant', content: 'Luar biasa Budi! Jawabanmu sangat presisi. Kamu sudah sangat paham konsep dasar Trigonometri ini. Coba simpulkan sendiri bagaimana langkah utamanya! 🌟' }
+      ],
+      'hukum-newton': [
+        { role: 'assistant', content: 'Halo Budi! Yuk kita bedah materi **Hukum Newton tentang Gerak (Fisika SMA)** hari ini. Menurutmu apa bedanya Hukum I Newton dan Hukum II Newton?' },
+        { role: 'user', content: 'Hukum 1 itu tentang kelembaman ($F_{total} = 0$), benda diam tetap diam. Kalau Hukum 2 benda bergerak ada percepatan karena gaya $F = m \\cdot a$.' },
+        { role: 'assistant', content: 'Mantap sekali! Penalaran fisika yang sangat tajam 👍. Mengapa saat mobil berbelok tajam ke kanan, tubuh penumpang serasa terlempar ke kiri?' },
+        { role: 'user', content: 'Karena tubuh kita mencoba mempertahankan arah gerak lurusnya sesuai Hukum 1 Newton (Inersia)!' },
+        { role: 'assistant', content: 'Sempurna Budi! Kamu membuktikan pemahaman fisikamu luar biasa!' }
+      ],
+      'persamaan-linear': [
+        { role: 'assistant', content: 'Halo Budi! Mari kita bahas **Persamaan Linear & Sistem Persamaan (Matematika SMA)**.' },
+        { role: 'user', content: 'Siap kak, aku mau tanya cara paling cepat menyelesaikan Sistem Persamaan Linear Dua Variabel (SPLDV).' },
+        { role: 'assistant', content: 'Pertanyaan bagus! Untuk SPLDV, ada metode Eliminasi dan Substitusi. Menurutmu dalam kasus seperti $2x + y = 10$ dan $x - y = 2$, metode mana yang paling instan untuk mengeliminasi salah satu variabel?' },
+        { role: 'user', content: 'Tinggal kita jumlahkan kedua persamaan kak! Karena $+y$ dan $-y$ kalau dijumlahkan hasilnya $0$, jadi sisa $3x = 12$, ketemu $x = 4$!' },
+        { role: 'assistant', content: 'Hebat sekali Budi! Kamu sangat sigap melihat eliminasi variabel $y$. Lanjutkan dengan mencari nilai $y$ ya!' }
+      ]
+    },
+    'demo-murid-b': {
+      // Siti Rahma (SMP Kelas 8)
+      'persamaan-linear': [
+        { role: 'assistant', content: 'Halo Siti! Selamat datang di sesi **Persamaan Linear Satu Variabel (Matematika SMP)**. Pernah dengar kata "variabel"? Menurutmu variabel itu apa sih?' },
+        { role: 'user', content: 'Variabel itu huruf pengganti angka yang belum diketahui, kayak $x$ atau $y$ kak.' },
+        { role: 'assistant', content: 'Tepat sekali Siti! Pintar 🌟. Bayangkan ada timbangan: di kiri ada 2 kantong misteri ($2x$) plus 4 kelereng, di kanan ada 10 kelereng. Timbangan seimbang ($2x + 4 = 10$). Gimana cara tahu isi 1 kantong misteri?' },
+        { role: 'user', content: 'Ambil 4 kelereng dari kanan dan kiri dulu, jadi sisa $2x = 6$. Lalu 6 kelereng dibagi 2, ketemu 1 kantong isinya 3 kelereng ($x = 3$)!' },
+        { role: 'assistant', content: 'Wah hebat banget Siti! Kamu menemukan nilai $x$ dengan menganalogikannya secara visual dan intuitif. Kerja bagus!' }
+      ],
+      trigonometri: [
+        { role: 'assistant', content: 'Halo Siti! Hari ini kita kenalan dengan **Pengenalan Segitiga Siku-Siku & Trigonometri Dasar**. Tahu tidak apa ciri khas segitiga siku-siku?' },
+        { role: 'user', content: 'Segitiga siku-siku punya satu sudut yang besarnya $90^\\circ$!' },
+        { role: 'assistant', content: 'Betul sekali Siti! Dan berlaku Teorema Phytagoras $a^2 + b^2 = c^2$. Menurutmu jika alasnya 3 cm dan tingginya 4 cm, berapa panjang sisi miringnya?' },
+        { role: 'user', content: 'Panjang sisi miringnya 5 cm kak! Soalnya $3^2 + 4^2 = 9 + 16 = 25$, lalu diakar kuadrat jadi 5 cm.' },
+        { role: 'assistant', content: 'Luar biasa Siti! Jawabanmu 100% tepat 👏.' }
+      ],
+      'hukum-newton': [
+        { role: 'assistant', content: 'Halo Siti! Mari kita bahas **Gaya dan Gerak (IPA SMP)**. Menurut Siti, kenapa sepeda yang kita kayuh di jalan datar bisa berhenti sendiri kalau tidak dikayuh lagi?' },
+        { role: 'user', content: 'Karena ada gaya gesek antara ban sepeda dengan jalanan kak!' },
+        { role: 'assistant', content: 'Wah tepat sekali Siti! Gaya gesek itulah yang menghambat gerak benda.' }
+      ]
+    },
+    'demo-murid-c': {
+      // Ahmad Rofi (SMA Kelas 12 - IPS)
+      statistika: [
+        { role: 'assistant', content: 'Halo Rofi! Selamat datang di sesi **Statistika & Analisis Data Ekonomi (SMA Kelas 12)**. Dalam analisis survey ekonomi, apa perbedaan antara Mean (Rata-rata), Median, dan Modus?' },
+        { role: 'user', content: 'Mean itu jumlah semua data dibagi banyaknya data. Median itu nilai tengah setelah data diurutkan. Modus itu data yang paling sering muncul.' },
+        { role: 'assistant', content: 'Penjelasan yang ringkas dan sangat tepat Rofi! 📊 Jika dalam survey gaji karyawan terdapat 1 orang CEO dengan gaji 100 juta dan 9 karyawan dengan gaji 4 juta, manakah ukuran yang lebih tepat untuk menggambarkan gaji rata-rata mayoritas karyawan?' },
+        { role: 'user', content: 'Lebih tepat pakai Median! Karena Mean akan bias terdistorsi oleh gaji CEO yang sangat tinggi.' },
+        { role: 'assistant', content: 'Analisis logika ekonomi yang sangat kritis Rofi! Pemahaman statistikamu luar biasa 👍.' }
+      ],
+      trigonometri: [
+        { role: 'assistant', content: 'Halo Rofi! Mari diskusi tentang **Aplikasi Trigonometri dalam Pengukuran Lapangan**. Pernah dengar alat Klinometer untuk mengukur tinggi pohon atau gedung?' },
+        { role: 'user', content: 'Pernah kak, alat untuk mengukur sudut elevasi mata kita ke puncak gedung.' },
+        { role: 'assistant', content: 'Tepat sekali! Dengan tahu jarak ke gedung dan sudut elevasinya, perbandingan trigonometri mana yang kita pakai untuk menghitung tinggi gedung?' },
+        { role: 'user', content: 'Pakai Tangen! Karena $\\tan(\\theta) = \\frac{\\text{tinggi gedung}}{\\text{jarak mendatar}}$.' },
+        { role: 'assistant', content: 'Keren banget Rofi! Kamu memahami penerapan praktisnya dengan sempurna.' }
+      ],
+      'hukum-newton': [
+        { role: 'assistant', content: 'Halo Rofi! Yuk kita pelajari **Konsep Fisika Terapan & Penerapan Hukum Newton**.' },
+        { role: 'user', content: 'Halo kak, aku tertarik dengan Hukum III Newton tentang Aksi-Reaksi.' },
+        { role: 'assistant', content: 'Topik menarik! Hukum III Newton menyatakan $F_{aksi} = -F_{reaksi}$. Saat roket meluncur ke luar angkasa, gaya aksinya adalah semburan gas ke bawah. Menurut Rofi, apa gaya reaksinya?' },
+        { role: 'user', content: 'Gaya dorong gas ke atas yang membuat badan roket terangkat meluncur ke udara!' },
+        { role: 'assistant', content: 'Sempurna Rofi! Pemahaman fisika terapanmu sangat luar biasa.' }
+      ]
+    }
+  };
+
+  // Topic-based sessions list with default fallback chat history
   const topicSessions = [
     { 
       id: 'trigonometri', 
@@ -73,6 +149,17 @@ const ChatPage = () => {
         { role: 'user', content: 'Kita kurangi kedua ruas dengan 4 dulu, jadi 2x = 6. Lalu dibagi 2, ketemu x = 3.' },
         { role: 'assistant', content: 'Hebat! Kamu melakukan pemindahan ruas dengan sangat logis. Mengapa kita harus melakukan operasi yang sama (seperti mengurangi 4 atau membagi 2) di kedua sisi persamaan?' }
       ]
+    },
+    {
+      id: 'statistika',
+      name: 'Statistika & Data',
+      history: [
+        { role: 'assistant', content: 'Halo! Mari belajar Statistika & Olah Data. Apa yang kamu ketahui tentang Mean, Median, dan Modus?' },
+        { role: 'user', content: 'Mean itu rata-rata, Median itu nilai tengah, dan Modus itu nilai terbanyak.' },
+        { role: 'assistant', content: 'Bagus sekali! Bagaimana cara mencari Median dari sekumpulan data yang jumlahnya genap?' },
+        { role: 'user', content: 'Kita urutkan datanya dulu, lalu ambil dua data di tengah dan dicari rata-ratanya.' },
+        { role: 'assistant', content: 'Sangat tepat! Kamu mahir dalam pemrosesan data matematika.' }
+      ]
     }
   ];
 
@@ -91,7 +178,7 @@ const ChatPage = () => {
   const getInitialHistory = (topicId, mode) => {
     const topic = topicSessions.find(t => t.id === topicId);
     const topicName = topic ? topic.name : 'Topik ini';
-    
+
     if (mode === 'guided') {
       return [{
         role: 'assistant',
@@ -103,8 +190,15 @@ const ChatPage = () => {
         content: `Halo! Mari mulai **Latihan Soal** untuk topik **${topicName}**! ✏️\n\nAku akan memberikan soal satu per satu untuk menguji pemahamanmu. Ketik "Siap" jika kamu ingin soal pertamanya dimuat!`
       }];
     } else {
+      // Check user-specific demo histories first
+      const userId = user?.id || 'demo-murid-a';
+      if (ACCOUNT_DEMO_HISTORIES[userId] && ACCOUNT_DEMO_HISTORIES[userId][topicId]) {
+        return ACCOUNT_DEMO_HISTORIES[userId][topicId];
+      }
+      
+      // Fallback to topic default complete history
       if (topic && topic.history && topic.history.length > 0) {
-        return [topic.history[0]];
+        return topic.history;
       }
       return [];
     }
@@ -145,7 +239,7 @@ const ChatPage = () => {
       const initialMessages = getInitialHistory(activeTopicId, activeMode);
       setMessages(initialMessages);
     }
-  }, [activeTopicId, activeMode]);
+  }, [activeTopicId, activeMode, user?.id]);
   
   const messagesEndRef = useRef(null);
 
